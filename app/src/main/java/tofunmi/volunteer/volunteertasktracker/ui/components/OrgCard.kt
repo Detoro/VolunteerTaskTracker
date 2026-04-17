@@ -34,13 +34,13 @@ fun OrgCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = task.title,
+                text = task.title ?: "",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = task.description,
+                text = task.description ?: "",
                 style = MaterialTheme.typography.bodyMedium
             )
             Spacer(modifier = Modifier.height(12.dp))

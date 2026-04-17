@@ -52,7 +52,6 @@ fun DashboardItemCard(
     onPicked: () -> Unit = {},
     onRemoveLog: () -> Unit = {}
 ) {
-    // State to track if the card is expanded or collapsed
     var expanded by remember { mutableStateOf(false) }
 
     ElevatedCard(
@@ -77,7 +76,7 @@ fun DashboardItemCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = data.title,
+                    text = data.title ?: "",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f)
@@ -101,7 +100,7 @@ fun DashboardItemCard(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = data.description,
+                    text = data.description ?: "",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Spacer(modifier = Modifier.height(16.dp))
@@ -110,17 +109,36 @@ fun DashboardItemCard(
 
                 // The Creator / Assignor
                 Text(
-                    text = "Created by: ${data.assigner.name}",
+                    text = "Created by: ${data.assigner?.name ?: "Unknown"}",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold
                 )
 
                 // Creation Date
+                val dateText = data.assignedDateTime?.let { formatter.format(it) } ?: "Unknown"
                 Text(
-                    text = "Created on: ${formatter.format(data.assignedDateTime)}",
+                    text = "Created on: $dateText",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
+                // start time
+                val startTime = data.startTimestamp?.let { formatter.format(it) } ?: "Not Started"
+                Text(
+                    text = "Started on: $startTime",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                // completion time
+                val completionTime = data.endTimestamp?.let { formatter.format(it) } ?: "Not finished"
+                Text(
+                    text = "Completed on: $completionTime",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                // completion time
 
                 // Goal it belongs to
                 when (data) {
@@ -188,7 +206,7 @@ fun DashboardItemCard(
                         TextButton(
                             onClick = onAssigned,
                             colors = ButtonDefaults.textButtonColors(
-                                contentColor = MaterialTheme.colorScheme.error
+                                contentColor = MaterialTheme.colorScheme.secondary
                             )
                         ) {
                             Icon(

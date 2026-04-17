@@ -2,6 +2,7 @@ package tofunmi.volunteer.volunteertasktracker
 
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -26,7 +27,6 @@ import tofunmi.volunteer.volunteertasktracker.ui.screens.TaskDashboardScreen
 //import tofunmi.volunteer.volunteertasktracker.ui.screens.GoalDashboardScreen
 import tofunmi.volunteer.volunteertasktracker.ui.theme.VolunteerTaskTrackerTheme
 
-// Notice the TaskDashboard route now expects an argument
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object SignUp : Screen("signup")
@@ -70,35 +70,39 @@ fun AppNavigation(viewModel: AppViewModel) {
     val organizations by viewModel.organizations.collectAsState()
     val allTasks by viewModel.tasks.collectAsState()
     val allGoals by viewModel.goals.collectAsState()
-    val currentUser = viewModel.currentUser
+    val loginError by viewModel.loginError.collectAsState()
+    val currentUser = viewModel.currentUser.collectAsState()
 
     NavHost(navController = navController, startDestination = Screen.Login.route) {
         composable(Screen.Login.route) {
             LoginScreen(
                 onNavigateToSignUp = { navController.navigate(Screen.SignUp.route) },
-                onLoginSuccess = {credentials ->
-                    viewModel.loginUser(credentials)
-                    navController.navigate(Screen.OrganizationDashboard.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
-                    }
-                }
+                onLoginSubmit = {credentials ->
+                    viewModel.loginUser(credentials, onSuccess = {
+                        navController.navigate(Screen.OrganizationDashboard.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
+                    })
+                },
+                loginError = loginError
             )
         }
         composable(Screen.SignUp.route) {
             SignUpScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onSignUpSuccess = {newUser ->
-                    viewModel.registerNewUser(newUser)
-                    navController.navigate(Screen.OrganizationDashboard.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
-                    }
+                    viewModel.registerNewUser(newUser, onSuccess = {
+                        navController.navigate(Screen.OrganizationDashboard.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
+                    })
                 }
             )
         }
         composable(Screen.OrganizationDashboard.route) {
             OrganizationDashboardScreen(
                 organizations = organizations,
-                currentUser = currentUser,
+                currentUser = currentUser.value,
                 onOrgSelected = { orgId ->
                     navController.navigate(Screen.TaskDashboard.createRoute(orgId))
                 }
@@ -106,30 +110,29 @@ fun AppNavigation(viewModel: AppViewModel) {
         }
         composable(Screen.TaskDashboard.route) { backStackEntry ->
             val orgId = backStackEntry.arguments?.getString("orgId") ?: return@composable
-            val availableSubscribers by viewModel.userProfile.collectAsState()
+            val availableSubscribers by viewModel.userProfiles.collectAsState()
 
             LaunchedEffect(orgId) {
                 viewModel.fetchUserProfilesFromFlask(orgId)
             }
 
             val orgTasks = allTasks.filter { it.orgId == orgId }
+            Log.d("Tasks", orgTasks.toString())
 
             TaskDashboardScreen(
                 orgId = orgId,
                 tasks = orgTasks,
-                currentUser = currentUser,
+                currentUser = currentUser.value,
                 availableSubscribers = availableSubscribers,
                 onTaskCompleted = { task ->
-                    viewModel.logCompletedTask(task)
-                    navController.navigate(Screen.TaskComplete.createRoute(orgId)) {
-                        navController.popBackStack()
-                    }
+                    viewModel.changeTaskCompletedStatus(task)
+                    navController.navigate(Screen.TaskComplete.createRoute(orgId))
                 },
                 onTaskCreated = { id, title, desc, assignee, days ->
                     viewModel.createTask(id, title, desc, assignee, days)
                 },
                 onTaskPicked = { taskId ->
-                    viewModel.pickTask(taskId, currentUser)
+                    viewModel.pickTask(taskId, currentUser.value)
                 },
                 onTaskUnassigned = { taskId ->
                     viewModel.assignTask(taskId)
@@ -141,49 +144,10 @@ fun AppNavigation(viewModel: AppViewModel) {
                     viewModel.deleteTask(task)
                 },
                 onRemoveTaskLog = { task ->
-                    viewModel.removeLoggedCompletedTask(task)
+                    viewModel.changeTaskCompletedStatus(task)
                 }
             )
         }
-//        composable(Screen.GoalDashboard.route) { backStackEntry ->
-//            val orgId = backStackEntry.arguments?.getString("orgId") ?: return@composable
-//            val availableSubscribers by viewModel.userProfile.collectAsState()
-//
-//            // I should make a subscriber group
-//
-//            LaunchedEffect(orgId) {
-//                viewModel.fetchUserProfilesFromFlask(orgId)
-//            }
-//
-//            val orgGoals = allGoals.filter { it.orgId == orgId }
-//            GoalDashboardScreen(
-//                goals = orgGoals,
-//                orgId = orgId,
-//                currentUser = currentUser,
-//                availableGroups = availableSubscribers,
-//                onGoalCompleted = { goal ->
-//                    viewModel.logCompletedGoal(goal)
-//                    navController.navigate(Screen.TaskComplete.createRoute(orgId)) {
-//                        navController.popBackStack()
-//                    }
-//                },
-//                onGoalCreated = { id, title, desc, assignee, days ->
-//                    viewModel.createTask(id, title, desc, assignee, days)
-//                },
-//                onGoalPicked = { taskId ->
-//                    viewModel.pickTask(taskId, currentUser)
-//                },
-//                onGoalUnassigned = { taskId ->
-//                    viewModel.assignTask(taskId)
-//                },
-//                onGoalAssigned = { taskId, user ->
-//                    viewModel.assignTask(taskId, user)
-//                },
-//                onGoalDeleted = {goal ->
-//                    viewModel.deleteGoal(goal)
-//                }
-//            )
-//        }
         composable(Screen.TaskComplete.route) { backStackEntry ->
             val orgId = backStackEntry.arguments?.getString("orgId") ?: return@composable
             TaskCompleteScreen(

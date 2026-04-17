@@ -43,8 +43,10 @@ fun TaskCreateDialog(
     var description by remember { mutableStateOf("") }
     var expiryDays by remember { mutableStateOf("7") } // Default to 7 days
 
-    var expanded by remember { mutableStateOf(false) }
+    var assigneeDropdownExpanded by remember { mutableStateOf(false) }
+    var goalDropdownExpanded by remember { mutableStateOf(false) }
     var selectedAssignee by remember { mutableStateOf<UserProfile?>(null) }
+    var selectedGoal by remember { mutableStateOf<String?>(null) }
 
     Dialog(onDismissRequest = onDismissRequested) {
         Card(
@@ -95,26 +97,26 @@ fun TaskCreateDialog(
 
                 // 4. Assignee Dropdown (Only show if the current user is Organization)
                 ExposedDropdownMenuBox(
-                    expanded = expanded,
-                    onExpandedChange = { expanded = !expanded }
+                    expanded = assigneeDropdownExpanded,
+                    onExpandedChange = { assigneeDropdownExpanded = !assigneeDropdownExpanded }
                 ) {
                     OutlinedTextField(
                         value = selectedAssignee?.name ?: "Unassigned (Available to all)",
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("Assignee") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = assigneeDropdownExpanded) },
                         modifier = Modifier.menuAnchor().fillMaxWidth()
                     )
                     ExposedDropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
+                        expanded = assigneeDropdownExpanded,
+                        onDismissRequest = { assigneeDropdownExpanded = false }
                     ) {
                         DropdownMenuItem(
                             text = { Text("Unassigned (Available to all)") },
                             onClick = {
                                 selectedAssignee = null
-                                expanded = false
+                                assigneeDropdownExpanded = false
                             }
                         )
                         availableAssignees.forEach { user ->
@@ -122,7 +124,7 @@ fun TaskCreateDialog(
                                 text = { Text(user.name) },
                                 onClick = {
                                     selectedAssignee = user
-                                    expanded = false
+                                    assigneeDropdownExpanded = false
                                 }
                             )
                         }

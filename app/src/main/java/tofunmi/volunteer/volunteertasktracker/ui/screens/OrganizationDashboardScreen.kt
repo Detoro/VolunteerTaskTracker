@@ -34,7 +34,6 @@ import tofunmi.volunteer.volunteertasktracker.models.Organization
 import tofunmi.volunteer.volunteertasktracker.models.UserProfile
 import tofunmi.volunteer.volunteertasktracker.models.UserRole
 import tofunmi.volunteer.volunteertasktracker.models.VolunteerGroup // Make sure this is imported!
-import tofunmi.volunteer.volunteertasktracker.ui.components.GoalCreateDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,13 +54,6 @@ fun OrganizationDashboardScreen(
                 )
             )
         },
-        floatingActionButton = {
-            if (currentUser.role == UserRole.ORGANIZATION) {
-                FloatingActionButton(onClick = { showCreateDialog = true }) {
-                    Icon(Icons.Filled.Add, contentDescription = "Create Goal")
-                }
-            }
-        }
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -76,18 +68,18 @@ fun OrganizationDashboardScreen(
                 ElevatedCard(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { onOrgSelected(org.id) },
+                        .clickable { onOrgSelected(org.id ?: "") },
                     elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = org.name,
+                            text = org.name ?: "",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = org.description,
+                            text = org.description ?: "",
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }

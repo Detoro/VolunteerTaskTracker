@@ -1,6 +1,7 @@
 package tofunmi.volunteer.volunteertasktracker.ui.screens
 
 import android.os.Build
+import java.util.Date
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -135,12 +136,15 @@ fun TaskDashboardScreen(
                     data = task,
                     currentUserRole = currentUser.role,
                     onDeleted = { onTaskDeleted(task) },
-                    onCompleted = { onTaskCompleted(task) },
-                    onUnassigned = { onTaskUnassigned(task.id) },
+                    onCompleted = {
+                        onTaskCompleted(task)
+                        task.endTimestamp = Date() },
+                    onUnassigned = { onTaskUnassigned(task.id ?: "") },
                     onAssigned = {
                         taskToAssign = task
+                        task.startTimestamp = Date()
                     },
-                    onPicked = { onTaskPicked(task.id) },
+                    onPicked = { onTaskPicked(task.id ?: "") },
                     onRemoveLog = { onRemoveTaskLog(task) }
                 )
             }
@@ -161,7 +165,7 @@ fun TaskDashboardScreen(
 
         taskToAssign?.let { activeTask ->
             TaskAssignDialog(
-                taskId = activeTask.id,
+                taskId = activeTask.id ?: "",
                 onDismissRequest = { taskToAssign = null },
 
                 onTaskAssigned = { id, assignee ->

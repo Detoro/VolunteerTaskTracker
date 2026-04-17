@@ -8,6 +8,7 @@ import retrofit2.http.Path
 import tofunmi.volunteer.volunteertasktracker.models.LoginCredentials
 import tofunmi.volunteer.volunteertasktracker.models.Organization
 import tofunmi.volunteer.volunteertasktracker.models.DashboardItem.Task
+import tofunmi.volunteer.volunteertasktracker.models.SignUpPayload
 import tofunmi.volunteer.volunteertasktracker.models.UserProfile
 import tofunmi.volunteer.volunteertasktracker.models.VolunteerGroup
 
@@ -17,7 +18,7 @@ interface ApiInterface {
     suspend fun getAllTasks(): List<Task>
 
     @POST("api/users/register")
-    suspend fun registerUser(@Body user: UserProfile)
+    suspend fun registerUser(@Body user: SignUpPayload)
 
     @POST("api/users/login")
     suspend fun loginUser(@Body loginCredentials: LoginCredentials): UserProfile
@@ -29,13 +30,7 @@ interface ApiInterface {
     suspend fun deleteTask(@Body task: Task)
 
     @POST("api/tasks/log")
-    suspend fun logCompletedTask(@Body task: Task)
-
-    @POST("api/goals/log")
-    suspend fun logCompletedGoal(@Body goal: VolunteerGroup)
-
-    @POST("api/tasks/removeLog")
-    suspend fun removeLoggedCompletedTask(@Body task: Task)
+    suspend fun changeTaskStatus(@Body task: Task)
 
     @PUT("api/tasks/{taskId}/update")
     suspend fun updateTaskAssignee(@Path("taskId") taskId: String, @Body updateData: Map<String, UserProfile?>)
